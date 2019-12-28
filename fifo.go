@@ -65,7 +65,7 @@ func (o *fifo) Get() (interface{}, error) {
 	}
 	item := o.data.Front()
 	if item == nil {
-		return nil, fmt.Errorf("fifo is empty")
+		return nil, nil
 	}
 	value := o.data.Remove(item)
 	return value, nil
@@ -80,7 +80,7 @@ func (o *fifo) Peek() (interface{}, error) {
 	}
 	item := o.data.Front()
 	if item == nil {
-		return nil, fmt.Errorf("fifo is empty")
+		return nil, nil
 	}
 	return item.Value, nil
 }
