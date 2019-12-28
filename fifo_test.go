@@ -6,7 +6,7 @@ import (
 	"github.com/reservoird/icd"
 )
 
-func TestChanQueueImplements(t *testing.T) {
+func TestFifoImplements(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
@@ -22,7 +22,7 @@ func TestChanQueueImplements(t *testing.T) {
 	}
 }
 
-func TestChanQueueConfig(t *testing.T) {
+func TestFifoConfig(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
@@ -33,7 +33,7 @@ func TestChanQueueConfig(t *testing.T) {
 	}
 }
 
-func TestChanQueuePut(t *testing.T) {
+func TestFifoPut(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("expecting nil got error %v", err)
@@ -50,23 +50,7 @@ func TestChanQueuePut(t *testing.T) {
 	}
 }
 
-func TestChanQueuePutErrorNil(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	d := []byte(nil)
-	err = q.Put(d)
-	if err == nil {
-		t.Errorf("error expecting error got nil")
-	}
-}
-
-func TestChanQueuePutErrorClosed(t *testing.T) {
+func TestFifoPutErrorClosed(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
@@ -86,7 +70,7 @@ func TestChanQueuePutErrorClosed(t *testing.T) {
 	}
 }
 
-func TestChanQueueGet(t *testing.T) {
+func TestFifoGet(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
@@ -115,7 +99,7 @@ func TestChanQueueGet(t *testing.T) {
 	}
 }
 
-func TestChanQueuePopErrorClosed(t *testing.T) {
+func TestFifoGetErrorClosed(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
@@ -140,7 +124,7 @@ func TestChanQueuePopErrorClosed(t *testing.T) {
 	}
 }
 
-func TestChanQueueClose(t *testing.T) {
+func TestFifoClose(t *testing.T) {
 	q, err := NewQueue()
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)

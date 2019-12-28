@@ -49,39 +49,40 @@ func (o *fifo) Name() string {
 func (o *fifo) Put(item interface{}) error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
-	if o.closed == false {
-		o.data.PushBack(item)
+	if o.closed == true {
+		return fmt.Errorf("fifo is closed")
 	}
-	return fmt.Errorf("fifo is closed")
+	o.data.PushBack(item)
+	return nil
 }
 
 // Get receives data from queue
 func (o *fifo) Get() (interface{}, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
-	if o.closed == false {
-		item := o.data.Front()
-		if item == nil {
-			return nil, fmt.Errorf("fifo is empty")
-		}
-		value := o.data.Remove(item)
-		return value, nil
+	if o.closed == true {
+		return nil, fmt.Errorf("fifo is closed")
 	}
-	return nil, fmt.Errorf("fifo is closed")
+	item := o.data.Front()
+	if item == nil {
+		return nil, fmt.Errorf("fifo is empty")
+	}
+	value := o.data.Remove(item)
+	return value, nil
 }
 
 // Peek receives data from queue
 func (o *fifo) Peek() (interface{}, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
-	if o.closed == false {
-		item := o.data.Front()
-		if item == nil {
-			return nil, fmt.Errorf("fifo is empty")
-		}
-		return item.Value, nil
+	if o.closed == true {
+		return nil, fmt.Errorf("fifo is closed")
 	}
-	return nil, fmt.Errorf("fifo is closed")
+	item := o.data.Front()
+	if item == nil {
+		return nil, fmt.Errorf("fifo is empty")
+	}
+	return item.Value, nil
 }
 
 // Len returns the current length of the Queue
