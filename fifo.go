@@ -115,6 +115,6 @@ func (o *fifo) Close() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.closed = true
-	o.data = list.New()
+	o.data = nil
 	return nil
 }
