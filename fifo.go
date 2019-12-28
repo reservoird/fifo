@@ -1,14 +1,20 @@
 package main
 
 import (
+	"container/list"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"sync"
 
 	"github.com/reservoird/icd"
 )
 
 type fifo struct {
-	Tag string
+	data   *list.List
+	mutex  sync.Mutex
+	closed bool
+	Tag    string
 }
 
 // NewQueue is what reservoird to create a queue
@@ -17,6 +23,8 @@ func NewQueue() (icd.Queue, error) {
 }
 
 func (o *fifo) Config(cfg string) error {
+	o.data = list.New()
+	o.closed = false
 	o.Tag = "fifo"
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
@@ -38,40 +46,75 @@ func (o *fifo) Name() string {
 }
 
 // Put sends data to queue
-func (o *fifo) Put(data interface{}) error {
-	return nil
+func (o *fifo) Put(item interface{}) error {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	if o.closed == false {
+		o.data.PushBack(item)
+	}
+	return fmt.Errorf("fifo is closed")
 }
 
 // Get receives data from queue
 func (o *fifo) Get() (interface{}, error) {
-	return nil, nil
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	if o.closed == false {
+		item := o.data.Front()
+		if item == nil {
+			return nil, fmt.Errorf("fifo is empty")
+		}
+		value := o.data.Remove(item)
+		return value, nil
+	}
+	return nil, fmt.Errorf("fifo is closed")
 }
 
 // Peek receives data from queue
 func (o *fifo) Peek() (interface{}, error) {
-	return nil, nil
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	if o.closed == false {
+		item := o.data.Front()
+		if item == nil {
+			return nil, fmt.Errorf("fifo is empty")
+		}
+		return item.Value, nil
+	}
+	return nil, fmt.Errorf("fifo is closed")
 }
 
 // Len returns the current length of the Queue
 func (o *fifo) Len() int {
-	return 0
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	return o.data.Len()
 }
 
 // Cap returns the current length of the Queue
 func (o *fifo) Cap() int {
-	return 0
+	return -1
 }
 
 // Clear clears the Queue
 func (o *fifo) Clear() {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.data.Init()
 }
 
 // Closed returns where or not the queue is closed
 func (o *fifo) Closed() bool {
-	return false
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	return o.closed
 }
 
 // Close closes the channel
 func (o *fifo) Close() error {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.closed = true
+	o.data = list.New()
 	return nil
 }
