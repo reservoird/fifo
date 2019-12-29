@@ -11,6 +11,7 @@ import (
 )
 
 type fifo struct {
+	stats  chan<- []string
 	data   *list.List
 	mutex  sync.Mutex
 	closed bool
@@ -18,8 +19,9 @@ type fifo struct {
 }
 
 // New is what reservoird to create a queue
-func New(cfg string) (icd.Queue, error) {
+func New(cfg string, stats chan<- []string) (icd.Queue, error) {
 	o := &fifo{
+		stats:  stats,
 		data:   list.New(),
 		closed: false,
 		Tag:    "fifo",
