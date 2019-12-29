@@ -17,28 +17,26 @@ type fifo struct {
 	Tag    string
 }
 
-// NewQueue is what reservoird to create a queue
-func NewQueue() (icd.Queue, error) {
-	return new(fifo), nil
-}
-
-func (o *fifo) Config(cfg string) error {
-	o.data = list.New()
-	o.closed = false
-	o.Tag = "fifo"
+// New is what reservoird to create a queue
+func New(cfg string) (icd.Queue, error) {
+	o := &fifo{
+		data:   list.New(),
+		closed: false,
+		Tag:    "fifo",
+	}
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		f := fifo{}
 		err = json.Unmarshal(d, &f)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		o.Tag = f.Tag
 	}
-	return nil
+	return o, nil
 }
 
 func (o *fifo) Name() string {

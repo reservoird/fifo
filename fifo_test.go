@@ -7,11 +7,7 @@ import (
 )
 
 func TestFifoImplements(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -23,24 +19,16 @@ func TestFifoImplements(t *testing.T) {
 }
 
 func TestFifoConfig(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	_, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
 }
 
 func TestFifoPut(t *testing.T) {
-	q, err := NewQueue()
+	q, err := New("")
 	if err != nil {
 		t.Errorf("expecting nil got error %v", err)
-	}
-	err = q.Config("")
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
 	}
 	s := "hello"
 	d := []byte(s)
@@ -51,11 +39,7 @@ func TestFifoPut(t *testing.T) {
 }
 
 func TestFifoPutErrorClosed(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -71,11 +55,7 @@ func TestFifoPutErrorClosed(t *testing.T) {
 }
 
 func TestFifoGet(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -100,11 +80,7 @@ func TestFifoGet(t *testing.T) {
 }
 
 func TestFifoGetErrorClosed(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -125,11 +101,7 @@ func TestFifoGetErrorClosed(t *testing.T) {
 }
 
 func TestFifoClose(t *testing.T) {
-	q, err := NewQueue()
-	if err != nil {
-		t.Errorf("error expecting nil got error %v", err)
-	}
-	err = q.Config("")
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
