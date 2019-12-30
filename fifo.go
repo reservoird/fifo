@@ -10,45 +10,63 @@ import (
 	"github.com/reservoird/icd"
 )
 
-type fifo struct {
-	stats  chan<- string
+// FifoCfg contains config
+type FifoCfg struct {
+	Name string
+}
+
+// FifoStats contains stats
+type FifoStats struct {
+	MessagesReceived uint64
+	MessagesSent     uint64
+	Len              uint64
+	Closed           bool
+}
+
+// Fifo contains what is needed for queue
+type Fifo struct {
+	cfg    FifoCfg
 	data   *list.List
 	mutex  sync.Mutex
+	stats  FifoStats
 	closed bool
-	Tag    string
 }
 
 // New is what reservoird to create a queue
 func New(cfg string, stats chan<- string) (icd.Queue, error) {
-	o := &fifo{
-		stats:  stats,
-		data:   list.New(),
-		closed: false,
-		Tag:    "fifo",
+	c := FifoCfg{
+		Name: "com.reservoird.queue.fifo",
 	}
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
 		if err != nil {
 			return nil, err
 		}
-		f := fifo{}
-		err = json.Unmarshal(d, &f)
+		err = json.Unmarshal(d, &c)
 		if err != nil {
 			return nil, err
 		}
-		o.Tag = f.Tag
+	}
+	o := &Fifo{
+		cfg:    c,
+		data:   list.New(),
+		mutex:  sync.Mutex{},
+		stats:  FifoStats{},
+		closed: false,
 	}
 	return o, nil
 }
 
-func (o *fifo) Name() string {
-	return o.Tag
+// Name returns the name
+func (o *Fifo) Name() string {
+	return o.cfg.Name
 }
 
 // Put sends data to queue
-func (o *fifo) Put(item interface{}) error {
+func (o *Fifo) Put(item interface{}) error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
+	o.stats.MessagesReceived = o.stats.MessagesReceived + 1
 	if o.closed == true {
 		return fmt.Errorf("fifo is closed")
 	}
@@ -57,7 +75,7 @@ func (o *fifo) Put(item interface{}) error {
 }
 
 // Get receives data from queue
-func (o *fifo) Get() (interface{}, error) {
+func (o *Fifo) Get() (interface{}, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	if o.closed == true {
@@ -68,11 +86,12 @@ func (o *fifo) Get() (interface{}, error) {
 		return nil, nil
 	}
 	value := o.data.Remove(item)
+	o.stats.MessagesSent = o.stats.MessagesSent + 1
 	return value, nil
 }
 
 // Peek receives data from queue
-func (o *fifo) Peek() (interface{}, error) {
+func (o *Fifo) Peek() (interface{}, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	if o.closed == true {
@@ -86,33 +105,52 @@ func (o *fifo) Peek() (interface{}, error) {
 }
 
 // Len returns the current length of the Queue
-func (o *fifo) Len() int {
+func (o *Fifo) Len() int {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
+	o.stats.Len = uint64(o.data.Len())
 	return o.data.Len()
 }
 
 // Cap returns the current length of the Queue
-func (o *fifo) Cap() int {
+func (o *Fifo) Cap() int {
 	return -1
 }
 
 // Clear clears the Queue
-func (o *fifo) Clear() {
+func (o *Fifo) Clear() {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.data.Init()
 }
 
+// Stats returns stats
+func (o *Fifo) Stats() (string, error) {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	data, err := json.Marshal(o.stats)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// ClearStats clears stats
+func (o *Fifo) ClearStats() {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.stats = FifoStats{}
+}
+
 // Closed returns where or not the queue is closed
-func (o *fifo) Closed() bool {
+func (o *Fifo) Closed() bool {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	return o.closed
 }
 
 // Close closes the channel
-func (o *fifo) Close() error {
+func (o *Fifo) Close() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.closed = true
