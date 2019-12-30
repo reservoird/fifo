@@ -33,7 +33,7 @@ type Fifo struct {
 }
 
 // New is what reservoird to create a queue
-func New(cfg string, stats chan<- string) (icd.Queue, error) {
+func New(cfg string) (icd.Queue, error) {
 	c := FifoCfg{
 		Name: "com.reservoird.queue.fifo",
 	}

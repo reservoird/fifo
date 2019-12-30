@@ -7,7 +7,7 @@ import (
 )
 
 func TestFifoImplements(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -19,14 +19,14 @@ func TestFifoImplements(t *testing.T) {
 }
 
 func TestFifoConfig(t *testing.T) {
-	_, err := New("", nil)
+	_, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
 }
 
 func TestFifoPut(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("expecting nil got error %v", err)
 	}
@@ -39,7 +39,7 @@ func TestFifoPut(t *testing.T) {
 }
 
 func TestFifoPutErrorClosed(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -55,7 +55,7 @@ func TestFifoPutErrorClosed(t *testing.T) {
 }
 
 func TestFifoGet(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -80,7 +80,7 @@ func TestFifoGet(t *testing.T) {
 }
 
 func TestFifoGetErrorClosed(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
@@ -101,7 +101,7 @@ func TestFifoGetErrorClosed(t *testing.T) {
 }
 
 func TestFifoClose(t *testing.T) {
-	q, err := New("", nil)
+	q, err := New("")
 	if err != nil {
 		t.Errorf("error expecting nil got error %v", err)
 	}
