@@ -177,7 +177,7 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 		}
 
 		if run == true {
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond)
 		}
 	}
 }
