@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
+	"time"
 
 	"github.com/reservoird/icd"
 )
@@ -175,6 +176,9 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 			}
 		}
 
+		if run == true {
+			time.Sleep(time.Second)
+		}
 	}
 }
 
