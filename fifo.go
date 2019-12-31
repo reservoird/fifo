@@ -157,6 +157,12 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 		default:
 		}
 
+		// done
+		select {
+		case <-doneChan:
+			run = false
+		}
+
 		// get stats
 		stats, err := o.getStats(run)
 		if err != nil {
@@ -169,11 +175,6 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 			}
 		}
 
-		// done
-		select {
-		case <-doneChan:
-			run = false
-		}
 	}
 }
 
