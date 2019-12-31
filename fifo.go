@@ -18,6 +18,7 @@ type FifoCfg struct {
 
 // FifoStats contains stats
 type FifoStats struct {
+	Name             string
 	MessagesReceived uint64
 	MessagesSent     uint64
 	Len              uint64
@@ -130,6 +131,7 @@ func (o *Fifo) getStats(monitoring bool) (string, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 
+	o.stats.Name = o.cfg.Name
 	o.stats.Monitoring = monitoring
 
 	data, err := json.Marshal(o.stats)
