@@ -21,6 +21,7 @@ type FifoStats struct {
 	MessagesSent     uint64
 	Len              uint64
 	Closed           bool
+	Monitoring       bool
 }
 
 // Fifo contains what is needed for queue
@@ -124,10 +125,12 @@ func (o *Fifo) Clear() {
 	o.data.Init()
 }
 
-// Stats returns stats
-func (o *Fifo) Stats() (string, error) {
+func (o *Fifo) getStats(monitoring bool) (string, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
+
+	o.stats.Monitoring = monitoring
+
 	data, err := json.Marshal(o.stats)
 	if err != nil {
 		return "", err
@@ -135,11 +138,43 @@ func (o *Fifo) Stats() (string, error) {
 	return string(data), nil
 }
 
-// ClearStats clears stats
-func (o *Fifo) ClearStats() {
+func (o *Fifo) clearStats() {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.stats = FifoStats{}
+}
+
+// Monitor provides statistics and clear
+func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneChan <-chan struct{}, wg *sync.WaitGroup) {
+	defer wg.Done() // required
+
+	run := true
+	for run == true {
+		// clear
+		select {
+		case <-clearChan:
+			o.clearStats()
+		default:
+		}
+
+		// get stats
+		stats, err := o.getStats(run)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+		} else {
+			// stats
+			select {
+			case statsChan <- stats:
+			default:
+			}
+		}
+
+		// done
+		select {
+		case <-doneChan:
+			run = false
+		}
+	}
 }
 
 // Closed returns where or not the queue is closed
