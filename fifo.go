@@ -164,6 +164,7 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 		select {
 		case <-doneChan:
 			run = false
+		default:
 		}
 
 		// get stats
