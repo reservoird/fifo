@@ -140,6 +140,7 @@ func (o *Fifo) Close() error {
 	defer o.mutex.Unlock()
 	o.closed = true
 	o.data = nil
+	o.stats.Closed = o.closed
 	return nil
 }
 
