@@ -127,6 +127,22 @@ func (o *Fifo) Clear() {
 	o.data.Init()
 }
 
+// Closed returns where or not the queue is closed
+func (o *Fifo) Closed() bool {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	return o.closed
+}
+
+// Close closes the channel
+func (o *Fifo) Close() error {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.closed = true
+	o.data = nil
+	return nil
+}
+
 func (o *Fifo) getStats(monitoring bool) (string, error) {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
@@ -144,7 +160,10 @@ func (o *Fifo) getStats(monitoring bool) (string, error) {
 func (o *Fifo) clearStats() {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
-	o.stats = FifoStats{}
+	o.stats = FifoStats{
+		Name:   o.cfg.Name,
+		Closed: o.closed,
+	}
 }
 
 // Monitor provides statistics and clear
@@ -183,20 +202,4 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 			time.Sleep(time.Millisecond)
 		}
 	}
-}
-
-// Closed returns where or not the queue is closed
-func (o *Fifo) Closed() bool {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	return o.closed
-}
-
-// Close closes the channel
-func (o *Fifo) Close() error {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	o.closed = true
-	o.data = nil
-	return nil
 }
