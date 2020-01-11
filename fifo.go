@@ -93,20 +93,6 @@ func (o *Fifo) Get() (interface{}, error) {
 	return value, nil
 }
 
-// Peek receives data from queue
-func (o *Fifo) Peek() (interface{}, error) {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	if o.closed == true {
-		return nil, fmt.Errorf("fifo is closed")
-	}
-	item := o.data.Front()
-	if item == nil {
-		return nil, nil
-	}
-	return item.Value, nil
-}
-
 // Len returns the current length of the Queue
 func (o *Fifo) Len() int {
 	o.mutex.Lock()
@@ -168,21 +154,21 @@ func (o *Fifo) clearStats() {
 }
 
 // Monitor provides statistics and clear
-func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneChan <-chan struct{}, wg *sync.WaitGroup) {
-	defer wg.Done() // required
+func (o *Fifo) Monitor(mc *icd.MonitorControl) {
+	defer mc.WaitGroup.Done() // required
 
 	run := true
 	for run == true {
 		// clear
 		select {
-		case <-clearChan:
+		case <-mc.ClearChan:
 			o.clearStats()
 		default:
 		}
 
 		// done
 		select {
-		case <-doneChan:
+		case <-mc.DoneChan:
 			run = false
 		default:
 		}
@@ -194,7 +180,7 @@ func (o *Fifo) Monitor(statsChan chan<- string, clearChan <-chan struct{}, doneC
 		} else {
 			// stats
 			select {
-			case statsChan <- stats:
+			case mc.StatsChan <- stats:
 			default:
 			}
 		}
