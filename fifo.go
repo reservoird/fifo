@@ -188,4 +188,10 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 			time.Sleep(time.Millisecond)
 		}
 	}
+
+	stats := o.getStats(run)
+	select {
+	case mc.StatsChan <- stats:
+	case <-time.After(time.Second):
+	}
 }
