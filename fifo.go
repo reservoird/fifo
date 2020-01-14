@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"runtime"
 	"sync"
-	"time"
 
 	"github.com/reservoird/icd"
 )
@@ -183,9 +183,7 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		default:
 		}
 
-		if run == true {
-			time.Sleep(time.Millisecond)
-		}
+		runtime.Gosched()
 	}
 
 	// send final stats blocking
