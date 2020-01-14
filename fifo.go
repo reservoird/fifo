@@ -51,10 +51,12 @@ func New(cfg string) (icd.Queue, error) {
 		}
 	}
 	o := &Fifo{
-		cfg:    c,
-		data:   list.New(),
-		mutex:  sync.Mutex{},
-		stats:  FifoStats{},
+		cfg:   c,
+		data:  list.New(),
+		mutex: sync.Mutex{},
+		stats: FifoStats{
+			Name: c.Name,
+		},
 		closed: false,
 	}
 	return o, nil
@@ -176,8 +178,9 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		}
 
 		// send stats
+		stats := o.getStats(run)
 		select {
-		case mc.StatsChan <- o.getStats(run):
+		case mc.StatsChan <- stats:
 		default:
 		}
 
