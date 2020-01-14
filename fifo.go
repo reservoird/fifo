@@ -130,18 +130,20 @@ func (o *Fifo) Close() error {
 	return nil
 }
 
-func (o *Fifo) getStats(monitoring bool) (string, error) {
+func (o *Fifo) getStats(monitoring bool) *FifoStats {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 
-	o.stats.Name = o.cfg.Name
-	o.stats.Monitoring = monitoring
-
-	data, err := json.Marshal(o.stats)
-	if err != nil {
-		return "", err
+	fifoStats := &FifoStats{
+		Name:             o.cfg.Name,
+		MessagesReceived: o.stats.MessagesReceived,
+		MessagesSent:     o.stats.MessagesSent,
+		Len:              o.stats.Len,
+		Closed:           o.stats.Closed,
+		Monitoring:       monitoring,
 	}
-	return string(data), nil
+
+	return fifoStats
 }
 
 func (o *Fifo) clearStats() {
@@ -173,16 +175,10 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		default:
 		}
 
-		// get stats
-		stats, err := o.getStats(run)
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		} else {
-			// stats
-			select {
-			case mc.StatsChan <- stats:
-			default:
-			}
+		// send stats
+		select {
+		case mc.StatsChan <- o.getStats(run):
+		default:
 		}
 
 		if run == true {
