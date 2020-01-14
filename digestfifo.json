@@ -1,4 +1,5 @@
 {
-  "name": "fwdfifo"
+  "name": "fwdfifo",
+  "sleep": "1s"
 }
 

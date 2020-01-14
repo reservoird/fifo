@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"runtime"
 	"sync"
+	"time"
 
 	"github.com/reservoird/icd"
 )
 
 // FifoCfg contains config
 type FifoCfg struct {
-	Name string
+	Name     string
+	Duration string
 }
 
 // FifoStats contains stats
@@ -32,13 +33,15 @@ type Fifo struct {
 	data   *list.List
 	mutex  sync.Mutex
 	stats  FifoStats
+	sleep  time.Duration
 	closed bool
 }
 
 // New is what reservoird to create a queue
 func New(cfg string) (icd.Queue, error) {
 	c := FifoCfg{
-		Name: "com.reservoird.queue.fifo",
+		Name:     "com.reservoird.queue.fifo",
+		Duration: "1s",
 	}
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
@@ -50,6 +53,10 @@ func New(cfg string) (icd.Queue, error) {
 			return nil, err
 		}
 	}
+	sleep, err := time.ParseDuration(c.Duration)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing duration")
+	}
 	o := &Fifo{
 		cfg:   c,
 		data:  list.New(),
@@ -57,6 +64,7 @@ func New(cfg string) (icd.Queue, error) {
 		stats: FifoStats{
 			Name: c.Name,
 		},
+		sleep:  sleep,
 		closed: false,
 	}
 	return o, nil
@@ -170,20 +178,18 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		default:
 		}
 
-		// done
-		select {
-		case <-mc.DoneChan:
-			run = false
-		default:
-		}
-
 		// send stats
 		select {
 		case mc.StatsChan <- o.getStats(run):
 		default:
 		}
 
-		runtime.Gosched()
+		// done
+		select {
+		case <-mc.DoneChan:
+			run = false
+		case <-time.After(o.sleep):
+		}
 	}
 
 	// send final stats blocking
