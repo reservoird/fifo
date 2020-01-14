@@ -1,5 +1,5 @@
 {
   "name": "stdinfifo",
-  "sleep": "1s"
+  "sleepDuration": "1s"
 }
 

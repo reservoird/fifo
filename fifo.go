@@ -13,8 +13,8 @@ import (
 
 // FifoCfg contains config
 type FifoCfg struct {
-	Name     string
-	Duration string
+	Name          string
+	SleepDuration string
 }
 
 // FifoStats contains stats
@@ -40,8 +40,8 @@ type Fifo struct {
 // New is what reservoird to create a queue
 func New(cfg string) (icd.Queue, error) {
 	c := FifoCfg{
-		Name:     "com.reservoird.queue.fifo",
-		Duration: "1s",
+		Name:          "com.reservoird.queue.fifo",
+		SleepDuration: "1s",
 	}
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
@@ -53,7 +53,7 @@ func New(cfg string) (icd.Queue, error) {
 			return nil, err
 		}
 	}
-	sleep, err := time.ParseDuration(c.Duration)
+	sleep, err := time.ParseDuration(c.SleepDuration)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing duration")
 	}
