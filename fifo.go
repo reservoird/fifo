@@ -178,9 +178,8 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		}
 
 		// send stats
-		stats := o.getStats(run)
 		select {
-		case mc.StatsChan <- stats:
+		case mc.StatsChan <- o.getStats(run):
 		default:
 		}
 
@@ -189,9 +188,6 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 		}
 	}
 
-	stats := o.getStats(run)
-	select {
-	case mc.StatsChan <- stats:
-	case <-time.After(time.Second):
-	}
+	// send final stats blocking
+	mc.StatsChan <- o.getStats(run)
 }
