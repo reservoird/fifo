@@ -189,5 +189,5 @@ func (o *Fifo) Monitor(mc *icd.MonitorControl) {
 	}
 
 	// send final stats blocking
-	mc.StatsChan <- o.getStats(run)
+	mc.FinalStatsChan <- o.getStats(run)
 }
