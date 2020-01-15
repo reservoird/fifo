@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/reservoird/icd"
@@ -15,6 +16,7 @@ import (
 type FifoCfg struct {
 	Name          string
 	SleepDuration string
+	Capacity      int
 }
 
 // FifoStats contains stats
@@ -23,6 +25,7 @@ type FifoStats struct {
 	MessagesReceived uint64
 	MessagesSent     uint64
 	Len              uint64
+	Cap              uint64
 	Closed           bool
 	Monitoring       bool
 }
@@ -33,6 +36,7 @@ type Fifo struct {
 	data   *list.List
 	mutex  sync.Mutex
 	stats  FifoStats
+	queue  chan interface{}
 	sleep  time.Duration
 	closed bool
 }
@@ -42,6 +46,7 @@ func New(cfg string) (icd.Queue, error) {
 	c := FifoCfg{
 		Name:          "com.reservoird.queue.fifo",
 		SleepDuration: "1s",
+		Capacity:      1000,
 	}
 	if cfg != "" {
 		d, err := ioutil.ReadFile(cfg)
@@ -64,6 +69,7 @@ func New(cfg string) (icd.Queue, error) {
 		stats: FifoStats{
 			Name: c.Name,
 		},
+		queue:  make(chan interface{}, c.Capacity),
 		sleep:  sleep,
 		closed: false,
 	}
@@ -77,50 +83,46 @@ func (o *Fifo) Name() string {
 
 // Put sends data to queue
 func (o *Fifo) Put(item interface{}) error {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	o.stats.MessagesReceived = o.stats.MessagesReceived + 1
-	if o.closed == true {
+	atomic.AddUint64(&o.stats.MessagesReceived, 1)
+	if o.Closed() == true {
 		return fmt.Errorf("fifo is closed")
 	}
-	o.data.PushBack(item)
+	o.queue <- item
 	return nil
 }
 
 // Get receives data from queue
 func (o *Fifo) Get() (interface{}, error) {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	if o.closed == true {
+	if o.Closed() == true {
 		return nil, fmt.Errorf("fifo is closed")
 	}
-	item := o.data.Front()
-	if item == nil {
-		return nil, nil
+	item, ok := <-o.queue
+	if ok == false {
+		return nil, fmt.Errorf("fifo error")
 	}
-	value := o.data.Remove(item)
-	o.stats.MessagesSent = o.stats.MessagesSent + 1
-	return value, nil
+	atomic.AddUint64(&o.stats.MessagesSent, 1)
+	return item, nil
 }
 
 // Len returns the current length of the Queue
 func (o *Fifo) Len() int {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	o.stats.Len = uint64(o.data.Len())
-	return o.data.Len()
+	return len(o.queue)
 }
 
 // Cap returns the current length of the Queue
 func (o *Fifo) Cap() int {
-	return -1
+	return cap(o.queue)
 }
 
 // Clear clears the Queue
 func (o *Fifo) Clear() {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
-	o.data.Init()
+	for {
+		select {
+		case <-o.queue:
+		default:
+			break
+		}
+	}
 }
 
 // Closed returns where or not the queue is closed
@@ -135,8 +137,8 @@ func (o *Fifo) Close() error {
 	o.mutex.Lock()
 	defer o.mutex.Unlock()
 	o.closed = true
-	o.data = nil
 	o.stats.Closed = o.closed
+	close(o.queue)
 	return nil
 }
 
@@ -148,8 +150,9 @@ func (o *Fifo) getStats(monitoring bool) *FifoStats {
 		Name:             o.cfg.Name,
 		MessagesReceived: o.stats.MessagesReceived,
 		MessagesSent:     o.stats.MessagesSent,
-		Len:              o.stats.Len,
-		Closed:           o.stats.Closed,
+		Len:              uint64(len(o.queue)),
+		Cap:              uint64(cap(o.queue)),
+		Closed:           o.closed,
 		Monitoring:       monitoring,
 	}
 
