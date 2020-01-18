@@ -32,13 +32,14 @@ type FifoStats struct {
 
 // Fifo contains what is needed for queue
 type Fifo struct {
-	cfg    FifoCfg
-	data   *list.List
-	mutex  sync.Mutex
-	stats  FifoStats
-	queue  chan interface{}
-	sleep  time.Duration
-	closed bool
+	cfg      FifoCfg
+	data     *list.List
+	mutex    sync.Mutex
+	stats    FifoStats
+	queue    chan interface{}
+	capacity int
+	sleep    time.Duration
+	closed   bool
 }
 
 // New is what reservoird to create a queue
@@ -69,9 +70,10 @@ func New(cfg string) (icd.Queue, error) {
 		stats: FifoStats{
 			Name: c.Name,
 		},
-		queue:  make(chan interface{}, c.Capacity),
-		sleep:  sleep,
-		closed: false,
+		capacity: c.Capacity,
+		queue:    make(chan interface{}, c.Capacity),
+		sleep:    sleep,
+		closed:   false,
 	}
 	return o, nil
 }
@@ -123,6 +125,15 @@ func (o *Fifo) Clear() {
 			break
 		}
 	}
+}
+
+// Reset reopens queue
+func (o *Fifo) Reset() {
+	o.mutex.Lock()
+	defer o.mutex.Unlock()
+	o.closed = false
+	o.stats.Closed = o.closed
+	o.queue = make(chan interface{}, o.capacity)
 }
 
 // Closed returns where or not the queue is closed
