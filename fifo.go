@@ -100,7 +100,7 @@ func (o *Fifo) Get() (interface{}, error) {
 	}
 	item, ok := <-o.queue
 	if ok == false {
-		return nil, fmt.Errorf("fifo error")
+		return nil, nil
 	}
 	atomic.AddUint64(&o.stats.MessagesSent, 1)
 	return item, nil
